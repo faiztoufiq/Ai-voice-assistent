@@ -1,0 +1,20 @@
+{
+  "name": "ai-voice-assistant-prototype",
+  "version": "1.0.0",
+  "description": "Production-style prototype for a realtime AI phone voice assistant using Twilio and OpenAI Realtime.",
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch src/server.js",
+    "start": "node src/server.js",
+    "check": "node --check src/server.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "helmet": "^8.0.0",
+    "morgan": "^1.10.0",
+    "twilio": "^5.4.0",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {}
+}

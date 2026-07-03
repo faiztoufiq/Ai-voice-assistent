@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AI Voice Assistant Demo</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <section class="panel hero">
+        <div>
+          <p class="eyebrow">Realtime phone assistant</p>
+          <h1>AI Voice Assistant Demo</h1>
+          <p class="lede">
+            Production-style prototype for showing a client how an AI can answer a real phone call,
+            listen, and respond naturally.
+          </p>
+        </div>
+        <div class="status-card">
+          <span class="pulse"></span>
+          <div>
+            <p class="label">Server</p>
+            <strong id="server-status">Checking...</strong>
+          </div>
+        </div>
+      </section>
+
+      <section class="grid">
+        <article class="panel">
+          <h2>Demo Setup</h2>
+          <ol class="steps">
+            <li>Run the server locally.</li>
+            <li>Expose it with ngrok.</li>
+            <li>Set Twilio Voice webhook to <code>/voice</code>.</li>
+            <li>Call the Twilio number and watch events here.</li>
+          </ol>
+        </article>
+
+        <article class="panel">
+          <h2>Endpoints</h2>
+          <dl class="endpoints">
+            <dt>Voice webhook</dt>
+            <dd><code id="voice-url">/voice</code></dd>
+            <dt>Media stream</dt>
+            <dd><code>/media-stream</code></dd>
+            <dt>Health</dt>
+            <dd><code>/health</code></dd>
+          </dl>
+        </article>
+      </section>
+
+      <section class="panel browser-demo">
+        <div>
+          <p class="eyebrow">No Twilio needed</p>
+          <h2>Browser Voice Demo</h2>
+          <p class="muted">
+            Use your laptop microphone to demo the same realtime AI conversation while phone-provider signup is blocked.
+          </p>
+        </div>
+        <div class="call-controls">
+          <button id="start-browser-call" type="button">Start Demo Call</button>
+          <button id="stop-browser-call" type="button" disabled>End Call</button>
+          <strong id="browser-call-status">Idle</strong>
+        </div>
+        <audio id="remote-audio" autoplay></audio>
+      </section>
+
+      <section class="panel">
+        <div class="section-title">
+          <h2>Live Call Events</h2>
+          <button id="clear-events" type="button">Clear</button>
+        </div>
+        <div id="events" class="events" aria-live="polite"></div>
+      </section>
+    </main>
+
+    <script src="/app.js" type="module"></script>
+  </body>
+</html>
