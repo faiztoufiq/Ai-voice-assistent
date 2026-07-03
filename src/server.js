@@ -30,6 +30,16 @@ app.get("/health", (_request, response) => {
   });
 });
 
+app.get("/api/health", (_request, response) => {
+  const status = validateConfig();
+  response.status(status.ok ? 200 : 500).json({
+    ok: status.ok,
+    message: status.message,
+    model: config.realtimeModel,
+    voice: config.realtimeVoice,
+  });
+});
+
 app.get("/events", (request, response) => {
   response.setHeader("Content-Type", "text/event-stream");
   response.setHeader("Cache-Control", "no-cache, no-transform");
@@ -52,6 +62,7 @@ app.get("/api/config", (request, response) => {
     voiceWebhookUrl: `${origin}/voice`,
     mediaStreamPath: "/media-stream",
     healthUrl: `${origin}/health`,
+    eventStreamAvailable: true,
   });
 });
 

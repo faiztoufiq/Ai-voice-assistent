@@ -12,6 +12,7 @@ let visibleEvents = [];
 let peerConnection = null;
 let localStream = null;
 let dataChannel = null;
+let eventStreamAvailable = true;
 
 function renderEvents() {
   if (visibleEvents.length === 0) {
@@ -38,7 +39,7 @@ function renderEvents() {
 
 async function checkHealth() {
   try {
-    const response = await fetch("/health");
+    const response = await fetch("/api/health");
     const data = await response.json();
     statusText.textContent = data.ok ? `Ready (${data.model})` : data.message;
     pulse.classList.toggle("ok", data.ok);
@@ -53,8 +54,10 @@ async function loadDemoConfig() {
     const response = await fetch("/api/config");
     const data = await response.json();
     voiceUrl.textContent = data.voiceWebhookUrl;
+    eventStreamAvailable = data.eventStreamAvailable !== false;
   } catch {
     voiceUrl.textContent = `${window.location.origin}/voice`;
+    eventStreamAvailable = true;
   }
 }
 
@@ -188,29 +191,29 @@ clearButton.addEventListener("click", () => {
 startBrowserCall.addEventListener("click", startBrowserVoiceDemo);
 stopBrowserCall.addEventListener("click", stopBrowserVoiceDemo);
 
-const source = new EventSource("/events");
-source.onmessage = (message) => {
-  const event = JSON.parse(message.data);
+function startServerEvents() {
+  if (!eventStreamAvailable) return;
 
-  if (event.type === "snapshot") {
-    visibleEvents = event.events || [];
-  } else {
-    visibleEvents.unshift(event);
-  }
+  const source = new EventSource("/events");
+  source.onmessage = (message) => {
+    const event = JSON.parse(message.data);
 
-  renderEvents();
-};
+    if (event.type === "snapshot") {
+      visibleEvents = event.events || [];
+    } else {
+      visibleEvents.unshift(event);
+    }
 
-source.onerror = () => {
-  visibleEvents.unshift({
-    type: "dashboard.disconnected",
-    at: new Date().toISOString(),
-    message: "Live dashboard stream disconnected.",
-  });
-  renderEvents();
-};
+    renderEvents();
+  };
 
-loadDemoConfig();
+  source.onerror = () => {
+    source.close();
+    addLocalEvent("dashboard.disconnected", "Live server event stream disconnected.");
+  };
+}
+
+loadDemoConfig().then(startServerEvents);
 checkHealth();
 setInterval(checkHealth, 8000);
 renderEvents();

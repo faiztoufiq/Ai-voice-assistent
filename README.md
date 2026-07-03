@@ -88,10 +88,31 @@ If Twilio, Plivo, or another phone provider blocks signup in your region, you ca
 
 This mode does not use a real phone number, but it shows the client the realtime AI conversation experience immediately.
 
+## Deploy Browser Demo To Vercel
+
+The browser voice demo can run on Vercel. The real Twilio phone-call WebSocket backend should stay on a long-running server such as Render, Railway, or Fly.io.
+
+1. Import this GitHub repository in Vercel.
+2. Add these environment variables:
+
+   ```bash
+   OPENAI_API_KEY=sk-...
+   OPENAI_REALTIME_MODEL=gpt-realtime-2
+   OPENAI_REALTIME_VOICE=marin
+   BUSINESS_NAME=Your Client Business
+   ASSISTANT_NAME=Ava
+   ASSISTANT_PURPOSE=answer questions, collect caller details, and schedule callbacks
+   ```
+
+3. Deploy and open the generated Vercel URL.
+4. Click **Start Demo Call** and allow microphone access.
+
 ## Useful Routes
 
 - `GET /` - live demo dashboard
 - `GET /health` - config and server health
+- `GET /api/health` - Vercel-compatible config and server health
+- `GET /api/config` - Vercel-compatible dashboard config
 - `GET /api/realtime-token` - short-lived browser Realtime token
 - `POST /voice` - Twilio Voice webhook
 - `GET /twiml` - preview generated TwiML
