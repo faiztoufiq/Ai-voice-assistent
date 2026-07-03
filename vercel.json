@@ -1,14 +1,31 @@
 {
-  "buildCommand": "npm run vercel-build",
-  "outputDirectory": "public",
-  "rewrites": [
+  "version": 2,
+  "builds": [
     {
-      "source": "/health",
-      "destination": "/api/health"
+      "src": "api/**/*.js",
+      "use": "@vercel/node"
     },
     {
-      "source": "/",
-      "destination": "/index.html"
+      "src": "public/**",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/",
+      "dest": "/public/index.html"
+    },
+    {
+      "src": "/health",
+      "dest": "/api/health.js"
+    },
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/$1.js"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/public/$1"
     }
   ]
 }
