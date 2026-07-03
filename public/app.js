@@ -2,7 +2,6 @@ const statusText = document.querySelector("#server-status");
 const pulse = document.querySelector(".pulse");
 const eventsContainer = document.querySelector("#events");
 const clearButton = document.querySelector("#clear-events");
-const voiceUrl = document.querySelector("#voice-url");
 const startBrowserCall = document.querySelector("#start-browser-call");
 const stopBrowserCall = document.querySelector("#stop-browser-call");
 const browserCallStatus = document.querySelector("#browser-call-status");
@@ -53,10 +52,8 @@ async function loadDemoConfig() {
   try {
     const response = await fetch("/api/config");
     const data = await response.json();
-    voiceUrl.textContent = data.voiceWebhookUrl;
     eventStreamAvailable = data.eventStreamAvailable !== false;
   } catch {
-    voiceUrl.textContent = `${window.location.origin}/voice`;
     eventStreamAvailable = true;
   }
 }
