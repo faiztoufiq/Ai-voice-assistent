@@ -7,6 +7,8 @@ const required = ["OPENAI_API_KEY"];
 export const config = {
   port: Number(process.env.PORT || 3000),
   openaiApiKey: process.env.OPENAI_API_KEY || "",
+  openrouterApiKey: process.env.OPENROUTER_API_KEY || "",
+  openrouterModel: process.env.OPENROUTER_MODEL || "openrouter/free",
   publicBaseUrl: (process.env.PUBLIC_BASE_URL || "").replace(/\/$/, ""),
   twilioAuthToken: process.env.TWILIO_AUTH_TOKEN || "",
   verifyTwilioSignature: process.env.VERIFY_TWILIO_SIGNATURE === "true",
@@ -22,10 +24,12 @@ export const config = {
 export function validateConfig() {
   const missing = required.filter((name) => !process.env[name]);
 
-  if (missing.length > 0) {
+  if (missing.length > 0 && !config.openrouterApiKey) {
     return {
       ok: false,
-      message: `Missing required environment variables: ${missing.join(", ")}`,
+      message: `Missing required environment variables: ${missing.join(
+        ", "
+      )}. Set OPENROUTER_API_KEY for the free browser fallback.`,
     };
   }
 

@@ -9,5 +9,6 @@ export default function handler(request, response) {
     mediaStreamPath: "Not available on Vercel",
     healthUrl: `${origin}/api/health`,
     eventStreamAvailable: false,
+    openrouterAvailable: Boolean(process.env.OPENROUTER_API_KEY),
   });
 }

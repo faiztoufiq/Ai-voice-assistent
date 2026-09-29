@@ -12,6 +12,10 @@ let peerConnection = null;
 let localStream = null;
 let dataChannel = null;
 let eventStreamAvailable = true;
+let openrouterAvailable = false;
+let recognition = null;
+let fallbackModeActive = false;
+let fallbackBusy = false;
 
 function renderEvents() {
   if (visibleEvents.length === 0) {
@@ -53,8 +57,10 @@ async function loadDemoConfig() {
     const response = await fetch("/api/config");
     const data = await response.json();
     eventStreamAvailable = data.eventStreamAvailable !== false;
+    openrouterAvailable = data.openrouterAvailable === true;
   } catch {
     eventStreamAvailable = true;
+    openrouterAvailable = false;
   }
 }
 
@@ -160,13 +166,23 @@ async function startBrowserVoiceDemo() {
     setBrowserCallState("Live", true);
     addLocalEvent("browser.call.started", "Browser voice demo is live");
   } catch (error) {
+    addLocalEvent("browser.error", error.message);
+    if (openrouterAvailable && canUseSpeechFallback()) {
+      addLocalEvent(
+        "openrouter.fallback",
+        "OpenAI voice unavailable. Starting OpenRouter browser voice fallback."
+      );
+      startOpenRouterSpeechFallback();
+      return;
+    }
+
     stopBrowserVoiceDemo();
     setBrowserCallState("Error", false);
-    addLocalEvent("browser.error", error.message);
   }
 }
 
 function stopBrowserVoiceDemo() {
+  stopOpenRouterSpeechFallback();
   dataChannel?.close();
   peerConnection?.close();
   localStream?.getTracks().forEach((track) => track.stop());
@@ -178,6 +194,82 @@ function stopBrowserVoiceDemo() {
 
   setBrowserCallState("Idle", false);
   addLocalEvent("browser.call.ended", "Browser voice demo ended");
+}
+
+function canUseSpeechFallback() {
+  return "speechSynthesis" in window && ("SpeechRecognition" in window || "webkitSpeechRecognition" in window);
+}
+
+function speak(text) {
+  window.speechSynthesis.cancel();
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.rate = 1;
+  utterance.pitch = 1;
+  window.speechSynthesis.speak(utterance);
+}
+
+async function sendOpenRouterMessage(message) {
+  fallbackBusy = true;
+  addLocalEvent("openrouter.caller", message);
+
+  try {
+    const response = await fetch("/api/openrouter-text", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ message }),
+    });
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || "OpenRouter request failed");
+    }
+
+    addLocalEvent("openrouter.assistant", data.reply);
+    speak(data.reply);
+  } catch (error) {
+    addLocalEvent("openrouter.error", error.message);
+    setBrowserCallState("Error", true);
+  } finally {
+    fallbackBusy = false;
+  }
+}
+
+function startOpenRouterSpeechFallback() {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  recognition = new SpeechRecognition();
+  recognition.continuous = true;
+  recognition.interimResults = false;
+  recognition.lang = "en-US";
+  fallbackModeActive = true;
+
+  recognition.onresult = (event) => {
+    const last = event.results[event.results.length - 1];
+    const transcript = last?.[0]?.transcript?.trim();
+    if (!transcript || fallbackBusy) return;
+    sendOpenRouterMessage(transcript);
+  };
+
+  recognition.onerror = (event) => {
+    addLocalEvent("openrouter.speech.error", event.error || "Speech recognition failed");
+  };
+
+  recognition.onend = () => {
+    if (fallbackModeActive) recognition.start();
+  };
+
+  recognition.start();
+  setBrowserCallState("Live (OpenRouter)", true);
+  addLocalEvent("openrouter.call.started", "Speak now. OpenRouter will answer using browser text-to-speech.");
+  speak("Hi, this is Ava. How can I help today?");
+}
+
+function stopOpenRouterSpeechFallback() {
+  fallbackModeActive = false;
+  recognition?.stop();
+  recognition = null;
+  window.speechSynthesis?.cancel();
 }
 
 clearButton.addEventListener("click", () => {

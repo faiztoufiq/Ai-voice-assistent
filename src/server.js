@@ -5,6 +5,7 @@ import { WebSocketServer } from "ws";
 import { config, validateConfig } from "./config.js";
 import { addEventSubscriber, getRecentEvents, emitDemoEvent } from "./events.js";
 import { handleMediaStream } from "./realtimeBridge.js";
+import { generateOpenRouterReply } from "./openrouter.js";
 import { buildInstructions } from "./prompt.js";
 import { buildVoiceResponse, isValidTwilioRequest } from "./twilio.js";
 
@@ -63,7 +64,26 @@ app.get("/api/config", (request, response) => {
     mediaStreamPath: "/media-stream",
     healthUrl: `${origin}/health`,
     eventStreamAvailable: true,
+    openrouterAvailable: Boolean(config.openrouterApiKey),
   });
+});
+
+app.post("/api/openrouter-text", async (request, response) => {
+  const message = String(request.body?.message || "").trim();
+
+  if (!message) {
+    response.status(400).json({ error: "Message is required" });
+    return;
+  }
+
+  try {
+    const reply = await generateOpenRouterReply(message);
+    emitDemoEvent("openrouter.assistant", { text: reply });
+    response.json({ reply, model: config.openrouterModel });
+  } catch (error) {
+    emitDemoEvent("openrouter.error", { message: error.message });
+    response.status(500).json({ error: error.message });
+  }
 });
 
 app.get("/api/realtime-token", async (_request, response) => {

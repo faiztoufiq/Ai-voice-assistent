@@ -1,5 +1,6 @@
 export const realtimeModel = process.env.OPENAI_REALTIME_MODEL || "gpt-realtime-2";
 export const realtimeVoice = process.env.OPENAI_REALTIME_VOICE || "marin";
+export const openrouterModel = process.env.OPENROUTER_MODEL || "openrouter/free";
 export const businessName = process.env.BUSINESS_NAME || "Acme Clinic";
 export const assistantName = process.env.ASSISTANT_NAME || "Ava";
 export const assistantPurpose =
@@ -34,6 +35,15 @@ export function requireOpenAIKey(response) {
 
   response.status(500).json({
     error: "Missing OPENAI_API_KEY environment variable",
+  });
+  return false;
+}
+
+export function requireOpenRouterKey(response) {
+  if (process.env.OPENROUTER_API_KEY) return true;
+
+  response.status(500).json({
+    error: "Missing OPENROUTER_API_KEY environment variable",
   });
   return false;
 }
